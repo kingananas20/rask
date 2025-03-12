@@ -1,4 +1,4 @@
-use bincode;
+use bincode::{config::{Configuration, standard}, serde::{encode_to_vec, decode_from_slice}};
 use serde::{Serialize, Deserialize};
 use anyhow::Result;
 use std::{fs::File, io::{Write, Read}};
@@ -11,8 +11,8 @@ pub struct TaskFile {
 pub fn write_taskfile(taskfile: TaskFile, filepath: &str) -> Result<()> {
     let mut file: File = File::create(filepath)?;
 
-    let config: bincode::config::Configuration = bincode::config::standard();
-    let encoded: Vec<u8> = bincode::serde::encode_to_vec(taskfile, config)?;
+    let config: Configuration = standard();
+    let encoded: Vec<u8> = encode_to_vec(taskfile, config)?;
 
     // Add AES-256 encryption later
 
@@ -30,8 +30,8 @@ pub fn read_taskfile(filepath: &str) -> Result<TaskFile> {
 
     // Decrypt AES-256 encryption
 
-    let config: bincode::config::Configuration = bincode::config::standard();
-    let decoded: TaskFile = bincode::serde::decode_from_slice(&raw_data, config)?.0;
+    let config: Configuration = standard();
+    let decoded: TaskFile = decode_from_slice(&raw_data, config)?.0;
 
     Ok(decoded)
 }
