@@ -4,6 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+aead = "0.5.2"
+aes-gcm = "0.10.3"
 anyhow = "1.0.97"
 bincode = { version = "2.0.1", features = ["serde"] }
+hex = "0.4.3"
+keyring = "3.6.2"
+rand = "0.9.0"
 serde = { version = "1.0.219", features = ["derive"] }
