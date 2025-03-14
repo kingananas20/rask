@@ -17,4 +17,20 @@ pub fn write(service: &str, user: &str, mut secret: Vec<u8>) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::{self, RngCore};
+
+    #[test]
+    fn keychain() -> Result<()> {
+        let mut rng: rand::prelude::ThreadRng = rand::rng();
+        let mut secret: Vec<u8> = vec![0u8; 32];
+        rng.fill_bytes(&mut secret);
+
+        write("rask", "test", secret.clone())?;
+
+        let read_secret: Vec<u8> = read("rask", "test")?;
+
+        println!("{:?} {:?}", secret, read_secret);
+        assert_eq!(secret, read_secret);
+        Ok(())
+    }
 }
