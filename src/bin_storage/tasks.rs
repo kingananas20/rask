@@ -2,6 +2,7 @@ use bincode::{config::{Configuration, standard}, serde::{encode_to_vec, decode_f
 use serde::{Serialize, Deserialize};
 use anyhow::Result;
 use std::{fs::File, io::{Write, Read}};
+use crate::encryption::{encrypt, decrypt};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct TaskFile {
@@ -14,9 +15,9 @@ pub fn write_taskfile(taskfile: TaskFile, filepath: &str) -> Result<()> {
     let config: Configuration = standard();
     let encoded: Vec<u8> = encode_to_vec(taskfile, config)?;
 
-    // Add AES-256 encryption later
+    let encrypted: Vec<u8> = encrypt(encoded)?;
 
-    file.write_all(&encoded)?;
+    file.write_all(&encrypted)?;
     file.flush()?;
 
     Ok(())
@@ -28,10 +29,10 @@ pub fn read_taskfile(filepath: &str) -> Result<TaskFile> {
     let mut raw_data: Vec<_> = Vec::new();
     file.read_to_end(&mut raw_data)?;
 
-    // Decrypt AES-256 encryption
+    let decrypted: Vec<u8> = decrypt(raw_data)?;
 
     let config: Configuration = standard();
-    let decoded: TaskFile = decode_from_slice(&raw_data, config)?.0;
+    let decoded: TaskFile = decode_from_slice(&decrypted, config)?.0;
 
     Ok(decoded)
 }
