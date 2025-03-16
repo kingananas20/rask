@@ -2,9 +2,8 @@ use aes_gcm::{
     aead::{Aead, KeyInit, Payload}, Aes256Gcm, Key // Or `Aes128Gcm`
 };
 use anyhow::{Context, Result};
-use rand::RngCore;
 use super::keychain;
-use super::generatekey;
+use super::derivekey;
 
 pub fn decrypt(encrypted: Vec<u8>) -> Result<Vec<u8>> {
     let salt: [u8; 16] = encrypted[0..16].try_into().context("failed to extract salt")?;
@@ -12,7 +11,7 @@ pub fn decrypt(encrypted: Vec<u8>) -> Result<Vec<u8>> {
     let ciphertext: Vec<u8> = encrypted[28..].to_vec();
     let password: String = keychain::read("password", "rask")?;
 
-    let key: [u8; 32] = generatekey::generate_key(password, salt);
+    let key: [u8; 32] = derivekey::derive_key(password, salt);
     let key: &sha2::digest::generic_array::GenericArray<u8, _> = Key::<Aes256Gcm>::from_slice(&key);
 
     let cipher: Aes256Gcm = Aes256Gcm::new(key);
@@ -26,7 +25,7 @@ pub fn decrypt(encrypted: Vec<u8>) -> Result<Vec<u8>> {
 #[cfg(test)]
 mod tests {
     use crate::encryption::encrypt;
-
+    use rand::RngCore;
     use super::*;
 
     #[test]

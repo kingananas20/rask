@@ -1,5 +1,5 @@
 mod keychain;
-mod generatekey;
+mod derivekey;
 mod encrypt;
 mod decrypt;
 

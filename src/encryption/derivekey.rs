@@ -2,7 +2,7 @@ use pbkdf2::pbkdf2_hmac;
 use sha2::Sha256;
 use zeroize::Zeroize;
 
-pub fn generate_key(mut password: String, salt: [u8; 16]) -> [u8; 32] {
+pub fn derive_key(mut password: String, salt: [u8; 16]) -> [u8; 32] {
     let iterations: u32 = 100_000;
 
     let mut key: [u8; 32] = [0u8; 32];
@@ -22,7 +22,7 @@ mod tests {
         let mut salt: [u8; 16] = [0u8; 16];
         rng.fill_bytes(&mut salt);
 
-        let key: [u8; 32] = generate_key("SuperSecretPassword".to_string(), salt);
+        let key: [u8; 32] = derive_key("SuperSecretPassword".to_string(), salt);
         println!("{:?}\n{:?}", key, salt);
         assert!(true);
     }   
