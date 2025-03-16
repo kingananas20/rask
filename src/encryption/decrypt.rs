@@ -1,24 +1,27 @@
-use aes_gcm::{
-    aead::{Aead, KeyInit, Payload}, Aes256Gcm, Key // Or `Aes128Gcm`
+use chacha20poly1305::{
+    aead::{Aead, KeyInit, Payload},
+    XChaCha20Poly1305, XNonce, Key
 };
 use anyhow::{Context, Result};
 use super::keychain;
 use super::derivekey;
+use zeroize::Zeroize;
 
 pub fn decrypt(encrypted: Vec<u8>) -> Result<Vec<u8>> {
     let salt: [u8; 16] = encrypted[0..16].try_into().context("failed to extract salt")?;
-    let nonce: [u8; 12] = encrypted[16..28].try_into().context("failed to extract nonce")?;
-    let ciphertext: Vec<u8> = encrypted[28..].to_vec();
+    let nonce: [u8; 24] = encrypted[16..40].try_into().context("failed to extract nonce")?;
+    let ciphertext: Vec<u8> = encrypted[40..].to_vec();
     let password: String = keychain::read("password", "rask")?;
 
-    let key: [u8; 32] = derivekey::derive_key(password, salt)?;
-    let key: &aes_gcm::aead::generic_array::GenericArray<u8, _> = Key::<Aes256Gcm>::from_slice(&key);
+    let mut key: [u8; 32] = derivekey::derive_key(password, salt)?;
 
-    let cipher: Aes256Gcm = Aes256Gcm::new(key);
-    let plaintext: Vec<u8> = cipher.decrypt(&nonce.into(), Payload { msg: &ciphertext, aad: &[] })
+    let cipher: XChaCha20Poly1305 = XChaCha20Poly1305::new(Key::from_slice(&key));
+    let plaintext: Vec<u8> = cipher.decrypt(XNonce::from_slice(&nonce), Payload { msg: &ciphertext, aad: &[] })
         .map_err(|e| anyhow::anyhow!(e))
         .context("error during decryption")?;
 
+    key.zeroize();
+    
     Ok(plaintext)
 }
 

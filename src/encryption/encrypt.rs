@@ -1,5 +1,6 @@
-use aes_gcm::{
-    aead::{Aead, KeyInit, Payload}, Aes256Gcm, Key // Or `Aes128Gcm`
+use chacha20poly1305::{
+    aead::{Aead, KeyInit, Payload},
+    XChaCha20Poly1305, XNonce, Key
 };
 use anyhow::{Context, Result};
 use rand::RngCore;
@@ -12,16 +13,15 @@ pub fn encrypt(plaintext: Vec<u8>) -> Result<Vec<u8>> {
     let mut salt: [u8; 16] = [0u8; 16];
     rng.fill_bytes(&mut salt);
 
-    let mut nonce: [u8; 12] = [0u8; 12];
+    let mut nonce: [u8; 24] = [0u8; 24];
     rng.fill_bytes(&mut nonce);
 
     let password: String = keychain::read("password", "rask")?;
 
-    let key: [u8; 32] = derivekey::derive_key(password, salt)?;
-    let key: &aes_gcm::aead::generic_array::GenericArray<u8, _> = Key::<Aes256Gcm>::from_slice(&key);
+    let mut key: [u8; 32] = derivekey::derive_key(password.clone(), salt)?;
 
-    let cipher: Aes256Gcm = Aes256Gcm::new(key);
-    let mut ciphertext: Vec<u8> = cipher.encrypt(&nonce.into(), Payload { msg: &plaintext, aad: &[] })
+    let cipher: XChaCha20Poly1305 = XChaCha20Poly1305::new(Key::from_slice(&key));
+    let mut ciphertext: Vec<u8> = cipher.encrypt(XNonce::from_slice(&nonce), Payload { msg: &plaintext, aad: &[] })
         .map_err(|e| anyhow::anyhow!(e))
         .context("error during encryption")?;
 
@@ -29,6 +29,7 @@ pub fn encrypt(plaintext: Vec<u8>) -> Result<Vec<u8>> {
     combined.extend_from_slice(&nonce);
     combined.extend_from_slice(&ciphertext);
 
+    key.zeroize();
     nonce.zeroize();
     salt.zeroize();
     ciphertext.zeroize();

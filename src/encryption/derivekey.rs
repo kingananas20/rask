@@ -2,12 +2,13 @@ use zeroize::Zeroize;
 use argon2::Argon2;
 use anyhow::{Context, Result};
 
-pub fn derive_key(mut password: String, salt: [u8; 16]) -> Result<[u8; 32]> {
+pub fn derive_key(mut password: String, mut salt: [u8; 16]) -> Result<[u8; 32]> {
     let mut key: [u8; 32] = [0u8; 32];
     Argon2::default().hash_password_into(password.as_bytes(), &salt, &mut key)
         .map_err(|e| anyhow::anyhow!(e))
         .context("error during key derivation")?;
     password.zeroize();
+    salt.zeroize();
     Ok(key)
 }
 
@@ -22,9 +23,9 @@ mod tests {
         let mut salt: [u8; 16] = [0u8; 16];
         rng.fill_bytes(&mut salt);
 
-        let key: [u8; 32] = derive_key("SuperSecretPassword".to_string(), salt)?;
-        println!("{:?}\n{:?}", key, salt);
-        assert!(true);
+        let key1: [u8; 32] = derive_key("SuperSecretPassword".to_string(), salt)?;
+        let key2: [u8; 32] = derive_key("SuperSecretPassword".to_string(), salt)?;
+        assert_eq!(key1, key2);
         Ok(())
     }   
 }
