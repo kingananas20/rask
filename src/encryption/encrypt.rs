@@ -17,7 +17,7 @@ pub fn encrypt(plaintext: Vec<u8>) -> Result<Vec<u8>> {
 
     let password: String = keychain::read("password", "rask")?;
 
-    let key: [u8; 32] = derivekey::derive_key(password, salt);
+    let key: [u8; 32] = derivekey::derive_key(password, salt)?;
     let key: &sha2::digest::generic_array::GenericArray<u8, _> = Key::<Aes256Gcm>::from_slice(&key);
 
     let cipher: Aes256Gcm = Aes256Gcm::new(key);
