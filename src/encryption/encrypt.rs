@@ -5,6 +5,7 @@ use anyhow::{Context, Result};
 use rand::RngCore;
 use super::keychain;
 use super::generatekey;
+use zeroize::Zeroize;
 
 pub fn encrypt(plaintext: Vec<u8>) -> Result<Vec<u8>> {
     let mut rng: rand::prelude::ThreadRng = rand::rng();
@@ -20,13 +21,17 @@ pub fn encrypt(plaintext: Vec<u8>) -> Result<Vec<u8>> {
     let key: &sha2::digest::generic_array::GenericArray<u8, _> = Key::<Aes256Gcm>::from_slice(&key);
 
     let cipher: Aes256Gcm = Aes256Gcm::new(key);
-    let ciphertext: Vec<u8> = cipher.encrypt(&nonce.into(), Payload { msg: &plaintext, aad: &[] })
+    let mut ciphertext: Vec<u8> = cipher.encrypt(&nonce.into(), Payload { msg: &plaintext, aad: &[] })
         .map_err(|e| anyhow::anyhow!(e))
         .context("error during encryption")?;
 
     let mut combined: Vec<u8> = salt.to_vec();
     combined.extend_from_slice(&nonce);
     combined.extend_from_slice(&ciphertext);
+
+    nonce.zeroize();
+    salt.zeroize();
+    ciphertext.zeroize();
 
     Ok(combined)
 }
