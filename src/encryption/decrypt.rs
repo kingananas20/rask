@@ -27,7 +27,8 @@ pub fn decrypt(encrypted: Vec<u8>) -> Result<Vec<u8>> {
 
 #[cfg(test)]
 mod tests {
-    use crate::encryption::encrypt;
+    use crate::encryption::encrypt::encrypt;
+    use chacha20poly1305::aead;
     use rand::RngCore;
     use super::*;
 
@@ -37,12 +38,31 @@ mod tests {
         let mut data: [u8; 128] = [0u8; 128];
         rng.fill_bytes(&mut data);
 
-        let encrypted_data: Vec<u8> = encrypt::encrypt(data.to_vec())?;
+        let encrypted_data: Vec<u8> = encrypt(data.to_vec())?;
 
         let decrypted_data: Vec<u8> = decrypt(encrypted_data.clone())?;
 
         println!("{:?}\n{:?}\n{:?}", data, encrypted_data, decrypted_data);
         assert_eq!(data, * decrypted_data);
+        Ok(())
+    }
+
+    #[test]
+    fn changed_ciphertext() -> Result<()> {
+        let mut rng: rand::prelude::ThreadRng = rand::rng();
+        let mut data: [u8; 128] = [0u8; 128];
+        rng.fill_bytes(&mut data);
+
+        let mut encrypted_data: Vec<u8> = encrypt(data.to_vec())?;
+
+        encrypted_data[100] = 0;
+
+        let decrypted_data: Result<Vec<u8>, _> = decrypt(encrypted_data.clone());
+
+        assert!(decrypted_data.is_err(), "The decryption should fail");
+
+        let decrypted_data: Vec<u8> = decrypted_data.unwrap_or_default();
+        assert_ne!(data, *decrypted_data, "Decrypted data should not match the original");
         Ok(())
     }
 }
