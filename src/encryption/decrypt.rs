@@ -41,8 +41,7 @@ mod tests {
 
         let decrypted_data: Vec<u8> = decrypt(encrypted_data.clone())?;
 
-        println!("{:?}\n{:?}\n{:?}", data, encrypted_data, decrypted_data);
-        assert_eq!(data, * decrypted_data);
+        assert_eq!(data, * decrypted_data, "should be the same");
         Ok(())
     }
 
@@ -58,7 +57,7 @@ mod tests {
         for case in cases {
             let encrypted_data: Vec<u8> = encrypt(case.clone())?;
             let decrypted_data: Vec<u8> = decrypt(encrypted_data)?;
-            assert_eq!(decrypted_data, case);
+            assert_eq!(decrypted_data, case, "should be the same");
         }
 
         Ok(())
@@ -76,10 +75,10 @@ mod tests {
 
         let decrypted_data: Result<Vec<u8>, _> = decrypt(encrypted_data.clone());
 
-        assert!(decrypted_data.is_err(), "The decryption should fail");
+        assert!(decrypted_data.is_err(), "the decryption should fail");
 
         let decrypted_data: Vec<u8> = decrypted_data.unwrap_or_default();
-        assert_ne!(data, *decrypted_data, "Decrypted data should not match the original");
+        assert_ne!(data, *decrypted_data, "decrypted data should not match the original");
         Ok(())
     }
 }

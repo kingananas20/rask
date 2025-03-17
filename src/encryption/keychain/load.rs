@@ -40,17 +40,14 @@ mod tests {
 
         let read_password: String = read("test", "rask")?;
 
-        println!("{:?} {:?}", password, read_password);
-        assert_eq!(password, read_password);
+        assert_eq!(password, read_password, "should be the same");
         Ok(())
     }
 
     #[test]
     fn empty_entry() -> Result<()> {
-        let password: String = read("testempty", "rask")
-            .context("no password provided! use rask password add")?;
-        println!("{:?}", password);
-        assert!(true);
+        let password: String = read("testempty", "rask")?;
+        assert_eq!(password, "".to_string(), "should be an empty string");
         Ok(())
     }
 }

@@ -44,11 +44,9 @@ mod tests {
 
     #[test]
     fn encrypt_test() -> Result<()> {
-        let encrypted: Vec<u8> = encrypt(b"Super Secret message".to_vec())?;
+        let encrypted: Result<Vec<u8>, anyhow::Error> = encrypt(b"Super secret message".to_vec());
 
-        println!("{:?}", encrypted);
-
-        assert!(true);
+        assert!(!encrypted.is_err(), "shouldn't be an error");
         Ok(())
     }
 }
