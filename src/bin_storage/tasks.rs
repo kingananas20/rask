@@ -42,14 +42,63 @@ mod tests {
     use super::*;
 
     #[test]
-    fn write_and_read() -> Result<()> {
+    fn write_read() -> Result<()> {
         let write_data: TaskFile = TaskFile { tasks: vec![123] };
-        write_taskfile(write_data.clone(), "./data/tasks.rask")?;
+        let filepath: &str = "write_read.rask";
 
-        let read_data: TaskFile = read_taskfile("./data/tasks.rask")?;
+        write_taskfile(write_data.clone(), filepath)?;
 
-        assert_eq!(write_data, read_data);
+        let read_taskfile: TaskFile = read_taskfile(filepath)?;
+        std::fs::remove_file(filepath)?;
 
+        assert_eq!(write_data, read_taskfile, "should be the same");
+        Ok(())
+    }
+
+    #[test]
+    fn empty_tasklist() -> Result<()> {
+        let taskfile: TaskFile = TaskFile { tasks: vec![] };
+        let filepath: &str = "empty_tasklist.rask";
+
+        write_taskfile(taskfile.clone(), filepath)?;
+        let read_taskfile: TaskFile = read_taskfile(filepath)?;
+
+        assert_eq!(taskfile, read_taskfile, "should be the same");
+        std::fs::remove_file(filepath)?;
+        Ok(())
+    }
+
+    #[test]
+    fn read_nonexistent_file() -> Result<()> {
+        let filepath: &str = "non_existent.rask";
+        let result: Result<TaskFile, anyhow::Error> = read_taskfile(filepath);
+
+        assert!(result.is_err(), "reading a non-existent file should yield an error");
+        Ok(())
+    }
+
+    #[test]
+    fn read_corrupted_file() -> Result<()> {
+        let filepath: &str = "corrupted.rask";
+        std::fs::write(filepath, b"not encrypted or valid data")?;
+
+        let result: Result<TaskFile, anyhow::Error> = read_taskfile(filepath);
+
+        assert!(result.is_err(), "should fail to decrypt and decode");
+        std::fs::remove_file(filepath)?;
+        Ok(())
+    }
+
+    #[test]
+    fn large_taskfile() -> Result<()> {
+        let taskfile: TaskFile = TaskFile { tasks: (0..10_000).collect() };
+        let filepath: &str = "large_taskfile.rask";
+
+        write_taskfile(taskfile.clone(), filepath)?;
+        let read_taskfile: TaskFile = read_taskfile(filepath)?;
+
+        assert_eq!(taskfile, read_taskfile, "should be the same");
+        std::fs::remove_file(filepath)?;
         Ok(())
     }
 }

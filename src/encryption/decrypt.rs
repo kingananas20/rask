@@ -8,6 +8,10 @@ use super::derivekey;
 use zeroize::Zeroize;
 
 pub fn decrypt(encrypted: Vec<u8>) -> Result<Vec<u8>> {
+    if encrypted.len() < 40 {
+        return Err(anyhow::anyhow!("error during encryption: data too short"))
+    }
+
     let salt: [u8; 16] = encrypted[0..16].try_into().context("failed to extract salt")?;
     let nonce: [u8; 24] = encrypted[16..40].try_into().context("failed to extract nonce")?;
     let ciphertext: Vec<u8> = encrypted[40..].to_vec();
@@ -71,7 +75,11 @@ mod tests {
 
         let mut encrypted_data: Vec<u8> = encrypt(data.to_vec())?;
 
-        encrypted_data[100] = 0;
+        if encrypted_data[100] != 0 {
+            encrypted_data[100] = 0;
+        } else {
+            encrypted_data[100] = 1;
+        }
 
         let decrypted_data: Result<Vec<u8>, _> = decrypt(encrypted_data.clone());
 
