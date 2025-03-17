@@ -28,4 +28,16 @@ mod tests {
         assert_eq!(key1, key2);
         Ok(())
     }   
+
+    #[test]
+    fn derive_different_keys() -> Result<()> {
+        let mut rng: rand::prelude::ThreadRng = rand::rng();
+        let mut salt: [u8; 16] = [0u8; 16];
+        rng.fill_bytes(&mut salt);
+
+        let key1: [u8; 32] = derive_key("SuperSecretPassword1".to_string(), salt)?;
+        let key2: [u8; 32] = derive_key("SuperSecretPassword2".to_string(), salt)?;
+        assert_ne!(key1, key2);
+        Ok(())
+    }
 }
