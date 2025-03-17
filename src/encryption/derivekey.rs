@@ -18,7 +18,7 @@ mod tests {
     use rand::RngCore;
 
     #[test]
-    fn derive() -> Result<()> {
+    fn derive_same_keys() -> Result<()> {
         let mut rng: rand::prelude::ThreadRng = rand::rng();
         let mut salt: [u8; 16] = [0u8; 16];
         rng.fill_bytes(&mut salt);
@@ -27,7 +27,7 @@ mod tests {
         let key2: [u8; 32] = derive_key("SuperSecretPassword".to_string(), salt)?;
         assert_eq!(key1, key2);
         Ok(())
-    }   
+    }
 
     #[test]
     fn derive_different_keys() -> Result<()> {

@@ -28,7 +28,6 @@ pub fn decrypt(encrypted: Vec<u8>) -> Result<Vec<u8>> {
 #[cfg(test)]
 mod tests {
     use crate::encryption::encrypt::encrypt;
-    use chacha20poly1305::aead;
     use rand::RngCore;
     use super::*;
 
