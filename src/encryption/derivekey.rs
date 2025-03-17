@@ -25,19 +25,35 @@ mod tests {
 
         let key1: [u8; 32] = derive_key("SuperSecretPassword".to_string(), salt)?;
         let key2: [u8; 32] = derive_key("SuperSecretPassword".to_string(), salt)?;
-        assert_eq!(key1, key2);
+        assert_eq!(key1, key2, "should be the same");
         Ok(())
     }
 
     #[test]
     fn derive_different_keys() -> Result<()> {
         let mut rng: rand::prelude::ThreadRng = rand::rng();
-        let mut salt: [u8; 16] = [0u8; 16];
-        rng.fill_bytes(&mut salt);
+        let mut salt1: [u8; 16] = [0u8; 16];
+        let mut salt2: [u8; 16] = [0u8; 16];
+        rng.fill_bytes(&mut salt1);
+        rng.fill_bytes(&mut salt2);
 
-        let key1: [u8; 32] = derive_key("SuperSecretPassword1".to_string(), salt)?;
-        let key2: [u8; 32] = derive_key("SuperSecretPassword2".to_string(), salt)?;
-        assert_ne!(key1, key2);
+        let password1: String = "SuperSecretPassword1".to_string();
+        let password2: String = "SuperSecretPassword2".to_string();
+
+        // Different passwords, same salts
+        let key1: [u8; 32] = derive_key(password1.clone(), salt1)?;
+        let key2: [u8; 32] = derive_key(password2.clone(), salt1)?;
+        assert_ne!(key1, key2, "shouldn't be the same");
+
+        // Same passwords, different salts
+        let key3: [u8; 32] = derive_key(password1.clone(), salt1)?;
+        let key4: [u8; 32] = derive_key(password1.clone(), salt2)?;
+        assert_ne!(key3, key4, "shouldn't be the same");
+
+        // Different passwords, different salts
+        let key5: [u8; 32] = derive_key(password1.clone(), salt1)?;
+        let key6: [u8; 32] = derive_key(password2, salt2)?;
+        assert_ne!(key5, key6, "shouldn't be the same");
         Ok(())
     }
 }

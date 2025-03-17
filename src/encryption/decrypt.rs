@@ -32,7 +32,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn encrypt_and_decrypt() -> Result<()> {
+    fn encrypt_decrypt() -> Result<()> {
         let mut rng: rand::prelude::ThreadRng = rand::rng();
         let mut data: [u8; 128] = [0u8; 128];
         rng.fill_bytes(&mut data);
@@ -43,6 +43,24 @@ mod tests {
 
         println!("{:?}\n{:?}\n{:?}", data, encrypted_data, decrypted_data);
         assert_eq!(data, * decrypted_data);
+        Ok(())
+    }
+
+    #[test]
+    fn encrypt_decrypt_various_inputs() -> Result<()> {
+        let cases: [Vec<u8>; 5] = [
+            vec![],
+            vec![0],
+            b"Hello, \xE4\xB8\x96 \xE7\x95\x8C!".to_vec(),
+            vec![1, 2, 3, 4, 5, 255],
+            vec![42; 1024],
+        ];
+        for case in cases {
+            let encrypted_data: Vec<u8> = encrypt(case.clone())?;
+            let decrypted_data: Vec<u8> = decrypt(encrypted_data)?;
+            assert_eq!(decrypted_data, case);
+        }
+
         Ok(())
     }
 
