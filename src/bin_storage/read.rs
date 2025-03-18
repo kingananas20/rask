@@ -1,19 +1,23 @@
 use bincode::{config::{standard, Configuration}, serde::decode_from_slice};
-use anyhow::Result;
+use anyhow::{Context, Result};
 use serde::de::Deserialize;
 use std::{fs::File, io::Read};
 use crate::encryption::decrypt;
 
 pub fn read<T: for<'de> Deserialize<'de>>(filepath: &str) -> Result<T> {
-    let mut file: File = File::open(filepath)?;
+    let mut file: File = File::open(filepath)
+        .with_context(|| format!("failed to open file at {}", filepath))?;
 
     let mut raw_data: Vec<_> = Vec::new();
-    file.read_to_end(&mut raw_data)?;
+    file.read_to_end(&mut raw_data)
+        .context("failed to read file to end")?;
 
-    let decrypted: Vec<u8> = decrypt(raw_data)?;
+    let decrypted: Vec<u8> = decrypt(raw_data)
+        .context("failed to decrypt")?;
 
     let config: Configuration = standard();
-    let decoded: T = decode_from_slice(&decrypted, config)?.0;
+    let decoded: T = decode_from_slice(&decrypted, config)
+        .context("failed to decode / serialize")?.0;
 
     Ok(decoded)
 }
